@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qrify - Central Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050508;
+            --card-bg: rgba(13, 14, 22, 0.8);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --brand: #8b5cf6;
+            --brand-gradient: linear-gradient(135deg, #8b5cf6, #06b6d4);
+            --border: rgba(255, 255, 255, 0.06);
+            --glow: rgba(139, 92, 246, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: var(--bg); color: var(--text-main); display: flex; min-height: 100vh; }
+
+        .sidebar {
+            width: 260px; background-color: #0b0c13; border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; justify-content: space-between; padding: 2.5rem 1.5rem; position: fixed; height: 100vh;
+        }
+
+        .logo h1 { font-size: 1.5rem; font-weight: 800; background: var(--brand-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px; }
+        .nav-menu { margin-top: 3rem; display: flex; flex-direction: column; gap: 0.5rem; flex-grow: 1; }
+        
+        .nav-item {
+            display: flex; align-items: center; padding: 0.85rem 1.2rem; color: var(--text-muted);
+            text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 0.95rem; transition: all 0.3s; cursor: pointer;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: rgba(139, 92, 246, 0.1); color: #fff; box-shadow: inset 0 0 10px rgba(139, 92, 246, 0.2); border-left: 3px solid #8b5cf6;
+        }
+
+        .btn-logout {
+            color: #f87171; background: none; border: none; text-align: left;
+            padding: 0.85rem 1.2rem; font-weight: 600; cursor: pointer; border-radius: 12px; transition: all 0.2s;
+        }
+        .btn-logout:hover { background: rgba(248, 113, 113, 0.1); }
+
+        .main-content { margin-left: 260px; flex-grow: 1; padding: 3.5rem; max-width: 1200px; width: calc(100% - 260px); }
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+        
+        h2 { font-size: 2rem; font-weight: 800; margin-bottom: 0.35rem; letter-spacing: -0.5px; }
+        .subtitle { color: var(--text-muted); margin-bottom: 2.5rem; font-size: 0.95rem; }
+
+        .studio-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 2.5rem; }
+        .card {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px;
+            padding: 2.5rem; box-shadow: 0 15px 35px rgba(0,0,0,0.4), 0 0 30px var(--glow); backdrop-filter: blur(10px);
+        }
+
+        .form-group { margin-bottom: 1.75rem; }
+        label { display: block; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.6rem; }
+        
+        input[type="text"], input[type="file"] {
+            width: 100%; border: 1px solid var(--border); border-radius: 12px;
+            padding: 0.85rem 1.2rem; font-size: 0.95rem; outline: none; background: rgba(255,255,255,0.02); color: #fff; transition: all 0.3s;
+        }
+        input[type="text"]:focus { border-color: #06b6d4; box-shadow: 0 0 15px rgba(6, 182, 212, 0.15); }
+
+        .type-selector { display: flex; gap: 0.75rem; margin-bottom: 1.75rem; }
+        .type-chip {
+            flex: 1; text-align: center; padding: 0.85rem; border: 1px solid var(--border);
+            border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 0.9rem; background: rgba(255,255,255,0.01); color: var(--text-muted); transition: all 0.3s;
+        }
+        .type-chip.active { background: var(--brand-gradient); color: white; border: none; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); }
+
+        .btn-create {
+            width: 100%; background: var(--brand-gradient); color: white; border: none;
+            padding: 1rem; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); transition: all 0.3s;
+        }
+        .btn-create:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5); }
+
+        .qr-output-box {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 320px; background: rgba(0,0,0,0.3); border: 2px dashed rgba(255,255,255,0.08); border-radius: 16px; padding: 2rem; text-align: center;
+        }
+
+        #outputQrImage {
+            max-width: 200px; background: white; padding: 12px;
+            border-radius: 12px; box-shadow: 0 0 30px rgba(255,255,255,0.1); display: none; margin-bottom: 1.5rem;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
+            padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 700; font-size: 0.9rem; cursor: pointer; display: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: all 0.2s;
+        }
+
+        .history-section { margin-top: 2.5rem; }
+        .history-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 1.25rem; color: #fff; letter-spacing: -0.3px; }
+        
+        .history-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .history-table th { padding: 0.85rem; border-bottom: 2px solid var(--border); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .history-table td { padding: 1.1rem 0.85rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        
+        .badge { padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
+        .badge-link { background: rgba(6, 182, 212, 0.15); color: #06b6d4; }
+        .badge-file { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+
+        .profile-row { display: flex; justify-content: space-between; padding: 1.25rem 0; border-bottom: 1px solid var(--border); }
+        .profile-label { color: var(--text-muted); font-size: 0.95rem; }
+        .profile-value { font-weight: 600; color: #fff; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div>
+            <div class="logo"><h1>✨ Qrify Studio</h1></div>
+            <div class="nav-menu">
+                <div id="tab-gen" class="nav-item active" onclick="showSection('view-generator', 'tab-gen')">⚡ QR Engine</div>
+                <div id="tab-prof" class="nav-item" onclick="showSection('view-profile', 'tab-prof')">👤 User Profile</div>
+            </div>
+        </div>
+        <button class="btn-logout" onclick="logout()">🚪 Log Out </button>
+    </div>
+
+    <div class="main-content">
+
+        <div id="view-generator" class="view-section active">
+            <h2>🔮 Asset Generation Studio</h2>
+            <p class="subtitle">Enter your destination targets below to assemble a beautiful dynamic link asset.</p>
+            
+            <div class="studio-grid">
+                <div class="card">
+                    <div class="form-group">
+                        <label>Asset Identification Name</label>
+                        <input type="text" id="assetTitle" placeholder="e.g., Project Workspace, My Resume Document">
+                    </div>
+
+                    <label>Routing Payload Destination Format</label>
+                    <div class="type-selector">
+                        <div id="chip-text" class="type-chip active" onclick="selectType('TEXT')">Website URL Link</div>
+                        <div id="chip-file" class="type-chip" onclick="selectType('FILE')">Binary Local File</div>
+                    </div>
+
+                    <input type="hidden" id="payloadType" value="TEXT">
+
+                    <div id="box-text" class="form-group">
+                        <label>Target Redirect Link Address</label>
+                        <input type="text" id="qrTextContent" placeholder="e.g., github.com/username">
+                    </div>
+
+                    <div id="box-file" class="form-group" style="display: none;">
+                        <label>Upload Document Block Source</label>
+                        <input type="file" id="fileSource">
+                    </div>
+
+                    <button class="btn-create" onclick="generateQR()">Compile Live QR Code</button>
+                </div>
+
+                <div class="card" style="display: flex; flex-direction: column; justify-content: center;">
+                    <div class="qr-output-box">
+                        <p id="statusMsg" style="color: var(--text-muted); font-size: 0.9rem;">Your compiled visual matrix asset will print here.</p>
+                        <img id="outputQrImage" alt="QR Code Output">
+                        <button id="downloadBtn" class="btn-download" onclick="downloadImage()">Download Asset PNG</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-profile" class="view-section">
+            <h2>🛡️ User Profile Dashboard</h2>
+            <p class="subtitle">Secure account credentials loaded directly from the production database configuration.</p>
+            
+            <div class="card" style="max-width: 100%; margin-bottom: 2.5rem;">
+                <div class="profile-row"><span class="profile-label">👤 Account Holder</span><span class="profile-value" id="profName">Active Admin</span></div>
+                <div class="profile-row"><span class="profile-label">📧 Registered Email</span><span class="profile-value" id="profEmail">Connected</span></div>
+            </div>
+
+            <div class="card history-section">
+                <div class="history-title">📜 Generated Asset Logs History</div>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Label Title</th>
+                            <th>Payload Type</th>
+                            <th>Tracking Endpoint Slug</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <tr>
+                            <td colspan="3" style="color: var(--text-muted); text-align: center; padding: 2rem;">No historical assets compiled yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function showSection(sectionId, tabId) {
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            
+            if(sectionId === 'view-profile') {
+                loadHistoryLog();
+            }
+        }
+
+        function selectType(type) {
+            document.getElementById('payloadType').value = type;
+            document.querySelectorAll('.type-chip').forEach(c => c.classList.remove('active'));
+            if(type === 'TEXT') {
+                document.getElementById('chip-text').classList.add('active');
+                document.getElementById('box-text').style.display = 'block';
+                document.getElementById('box-file').style.display = 'none';
+            } else {
+                document.getElementById('chip-file').classList.add('active');
+                document.getElementById('box-text').style.display = 'none';
+                document.getElementById('box-file').style.display = 'block';
+            }
+        }
+
+        function generateQR() {
+            const title = document.getElementById('assetTitle').value.trim();
+            const type = document.getElementById('payloadType').value;
+            const img = document.getElementById('outputQrImage');
+            const btn = document.getElementById('downloadBtn');
+            const status = document.getElementById('statusMsg');
+
+            if(!title) { alert("Please enter an asset label name!"); return; }
+            status.innerText = "Compiling vector matrix asset payload...";
+            
+            const formData = new FormData();
+            formData.append("title", title);
+            formData.append("type", type);
+
+            if(type === 'TEXT') {
+                const textVal = document.getElementById('qrTextContent').value.trim();
+                if(!textVal) { alert("Please provide a destination URL!"); return; }
+                formData.append("text", textVal);
+            } else {
+                const fileInput = document.getElementById('fileSource');
+                if(fileInput.files.length === 0) { alert("Please select a file to compile!"); return; }
+                formData.append("file", fileInput.files[0]);
+            }
+
+            fetch('/api/qr/process', { method: 'POST', body: formData })
+            .then(res => { if(!res.ok) throw new Error("Compilation failure"); return res.blob(); })
+            .then(blob => {
+                img.src = URL.createObjectURL(blob);
+                img.style.display = 'block';
+                btn.style.display = 'inline-block';
+                status.style.display = 'none';
+            })
+            .catch(err => {
+                status.innerText = "Compilation error. Please check backend environment status.";
+                console.error(err);
+            });
+        }
+
+        function loadHistoryLog() {
+            fetch('/api/user/history')
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('historyTableBody');
+                if(!data || data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" style="color: var(--text-muted); text-align: center; padding: 2rem;">No historical assets compiled yet.</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = data.map(item => `
+                    <tr>
+                        <td style="font-weight: 600; color: #fff;">${item.title}</td>
+                        <td><span class="badge ${item.assetType === 'TEXT' ? 'badge-link' : 'badge-file'}">${item.assetType}</span></td>
+                        <td style="font-family: monospace; color: #06b6d4;">/api/qr/view/${item.customUniqueSlug}</td>
+                    </tr>
+                `).join('');
+            }).catch(e => console.log("Syncing log streams..."));
+        }
+
+        function downloadImage() {
+            const img = document.getElementById('outputQrImage');
+            if(!img.src) return;
+            const link = document.createElement('a');
+            link.href = img.src;
+            link.download = `QR_Asset_${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            fetch('/api/user/profile')
+                .then(res => { if (res.ok) return res.json(); return null; })
+                .then(user => {
+                    if(user) {
+                        document.getElementById('profName').innerText = user.name;
+                        document.getElementById('profEmail').innerText = user.email;
+                    }
+                });
+            loadHistoryLog();
+        });
+
+        function logout() { window.location.href = "/index.html"; }
+    </script>
+</body>
+</html>
