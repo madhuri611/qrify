@@ -4,8 +4,9 @@ WORKDIR /app
 COPY . .
 RUN mvn clean package -DskipTests
 
-# Step 2: Run the Spring Boot application using Java 21
+# Step 2: Run the Spring Boot application using Java 21 mapped to Render's port
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-8080} -jar app.jar"]
+EXPOSE 10000
+ENTRYPOINT ["java", "-Dserver.port=10000", "-jar", "app.jar"]
